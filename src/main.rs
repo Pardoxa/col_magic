@@ -8,7 +8,7 @@ pub mod io;
 fn main() {
     let s = "1 2 3";
     let l = create_lazy(s);
-    let command2 = "(2+3*3 +C2*2)";
+    let command2 = "(sin(-2+3*3) +C2*2)";
 
     let c = lex_parser::LexItem::parse(command2);
     lex_parser::check_parenthesis(&c);

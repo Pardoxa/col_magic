@@ -6,7 +6,7 @@ pub enum Operation{
     Mul
 }
 
-pub fn parse_command(command: &str) -> Root<'static>
+pub fn parse_command(command: &str) -> Calculation<'static>
 {
     let command = LexItem::parse(command);
     println!("{:?}", command);
@@ -62,7 +62,7 @@ impl LastItem
     }
 }
 
-fn collapse_inside_parenthesis(mut sequence: Vec<LexItem<'static>>) -> Root<'static>
+fn collapse_inside_parenthesis(mut sequence: Vec<LexItem<'static>>) -> Calculation<'static>
 {
     #[cfg(debug_assertions)]
     println!("{:?}", sequence);
@@ -72,7 +72,7 @@ fn collapse_inside_parenthesis(mut sequence: Vec<LexItem<'static>>) -> Root<'sta
     else if sequence.len() == 1 {
         match sequence.pop().unwrap()
         {
-            LexItem::Root(root) => return root,
+            LexItem::Calculation(root) => return root,
             _ => {
                 panic!("Invalid command")
             }
@@ -102,7 +102,7 @@ fn collapse_inside_parenthesis(mut sequence: Vec<LexItem<'static>>) -> Root<'sta
                 let next = drain.nth(1).expect("invalid minus");
                 drop(drain);
                 let r = match next{
-                    LexItem::Root(root) => {
+                    LexItem::Calculation(root) => {
                         root
                     },
                     _ => {
@@ -111,7 +111,7 @@ fn collapse_inside_parenthesis(mut sequence: Vec<LexItem<'static>>) -> Root<'sta
                     }
                 };
                 let minus = Minus::new(r);
-                sequence.insert(pos, LexItem::Root(minus.into()));
+                sequence.insert(pos, LexItem::Calculation(minus.into()));
                 return collapse_inside_parenthesis(sequence);
             }       
         }
@@ -137,7 +137,7 @@ fn collapse_inside_parenthesis(mut sequence: Vec<LexItem<'static>>) -> Root<'sta
         };
         let root = match iter.next().unwrap()
         {
-            LexItem::Root(r) => r,
+            LexItem::Calculation(r) => r,
             _ => {
                 eprintln!("Invalid expression placement!");
                 std::process::exit(1);
@@ -154,7 +154,7 @@ fn collapse_inside_parenthesis(mut sequence: Vec<LexItem<'static>>) -> Root<'sta
             }
         };
         drop(iter);
-        sequence.insert(p, LexItem::Root(root));
+        sequence.insert(p, LexItem::Calculation(root));
         return collapse_inside_parenthesis(sequence);
     }
 
@@ -170,18 +170,18 @@ fn collapse_inside_parenthesis(mut sequence: Vec<LexItem<'static>>) -> Root<'sta
         let first = iter.next().unwrap();
         let left = match first 
         {
-            LexItem::Root(root) => root,
+            LexItem::Calculation(root) => root,
             _ => panic!("ERROR: Multiplication, left is not reducable to number :(")
         };
         let last = iter.nth(1).unwrap();
         let right = match last 
         {
-            LexItem::Root(root) => root,
+            LexItem::Calculation(root) => root,
             _ => panic!("ERROR: Multiplication, right is not reducable to number :(")
         };
         let mul = MulBranch::new(left, right);
         drop(iter);
-        sequence.insert(pos-1, LexItem::Root(mul.into()));
+        sequence.insert(pos-1, LexItem::Calculation(mul.into()));
         return collapse_inside_parenthesis(sequence);
     }
 
@@ -199,14 +199,14 @@ fn collapse_inside_parenthesis(mut sequence: Vec<LexItem<'static>>) -> Root<'sta
         let first = iter.next().unwrap();
         let left = match first 
         {
-            LexItem::Root(root) => root,
+            LexItem::Calculation(root) => root,
             _ => panic!("ERROR: Addition, left is not reducable to number :(")
         };
         let operation = iter.next().unwrap();
         let last = iter.next().unwrap();
         let right = match last 
         {
-            LexItem::Root(root) => root,
+            LexItem::Calculation(root) => root,
             _ => {
                 panic!("ERROR: Addition, right is not reducable to number :( {:?}", last)
             }
@@ -220,7 +220,7 @@ fn collapse_inside_parenthesis(mut sequence: Vec<LexItem<'static>>) -> Root<'sta
             min.into()
         };
 
-        sequence.insert(pos-1, LexItem::Root(root));
+        sequence.insert(pos-1, LexItem::Calculation(root));
         return collapse_inside_parenthesis(sequence);
         
 
@@ -230,7 +230,7 @@ fn collapse_inside_parenthesis(mut sequence: Vec<LexItem<'static>>) -> Root<'sta
     unimplemented!()
 }
 
-pub fn collapse(mut command_sequence: Vec<LexItem<'static>>) -> Root<'static>
+pub fn collapse(mut command_sequence: Vec<LexItem<'static>>) -> Calculation<'static>
 {
     let max_par = check_parenthesis(&command_sequence);
     if max_par == 0 {
@@ -267,7 +267,7 @@ pub fn collapse(mut command_sequence: Vec<LexItem<'static>>) -> Root<'static>
     assert!(matches!(first, Some(LexItem::Parentesis(Par::Open))));
     let inside = iter.collect();
     let root = collapse_inside_parenthesis(inside);
-    command_sequence.insert(pos_start, LexItem::Root(root));
+    command_sequence.insert(pos_start, LexItem::Calculation(root));
 
     collapse(command_sequence)
 }
@@ -286,7 +286,7 @@ pub enum Expression{
 
 #[derive(Debug)]
 pub enum LexItem<'a>{
-    Root(Root<'a>),
+    Calculation(Calculation<'a>),
     Parentesis(Par),
     Operation(Operation),
     Expression(Expression),
@@ -303,7 +303,7 @@ impl<'a> LexItem<'a>
 
     pub fn is_root(&self) -> bool
     {
-        matches!(self, Self::Root(_))
+        matches!(self, Self::Calculation(_))
     }
 
     pub fn parse(command: &str) -> Vec<Self>
@@ -345,7 +345,7 @@ impl<'a> LexItem<'a>
                     let idx = &p[m.start()..m.end()];
                     let idx = idx.parse().unwrap();
                     let col = Column::new(idx);
-                    (LexItem::Root(col.into()), &p[m.end()..])
+                    (LexItem::Calculation(col.into()), &p[m.end()..])
                 }, 
                 None => {
                     panic!("Error at parsing colum index")
@@ -369,7 +369,7 @@ impl<'a> LexItem<'a>
             let num = sub.parse().unwrap();
             let val = Value::new(num);
             let root = val.into();
-            return (LexItem::Root(root), &substr[m.end()..]);
+            return (LexItem::Calculation(root), &substr[m.end()..]);
         }
         unimplemented!()
     }

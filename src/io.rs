@@ -6,7 +6,7 @@ use crate::*;
 
 
 
-pub fn process(file: &str, commands: &[Root])
+pub fn process(file: &str, commands: &[Calculation])
 {
     let file = File::open(file)
         .expect("unable to open file");
