@@ -1,36 +1,37 @@
-use crate::lex_parser::{collapse, parse_command};
+use crate::lex_parser::{parse_command};
 
 mod lex_parser;
 mod magic_chain;
 pub use magic_chain::*;
 pub mod io;
+mod cmd;
+use structopt::StructOpt;
+use std::sync::atomic::AtomicBool;
+
+
+static VERBOSITY: AtomicBool = AtomicBool::new(false);
 
 fn main() {
-    let s = "1 2 3";
-    let l = create_lazy(s);
-    let command2 = "(sin(-2+3*3) +C2*2)";
 
-    let c = lex_parser::LexItem::parse(command2);
-    lex_parser::check_parenthesis(&c);
-    println!("{:?}", c);
-    let root1 = collapse(c);
-    println!("{}", root1.get_float(&l));
-    let command3 = "(2+3*3+sin (C2*2))";
-    let root2 = parse_command(command3);
-    println!("{}", root2.get_float(&l));
+    let opt = cmd::Cmd::from_args();
 
-    let command0 = "-C0 - 1";
-    let root = parse_command(command0);
+    if opt.verbose{
+        VERBOSITY.store(true, std::sync::atomic::Ordering::Relaxed);
+    }
 
-    let commands = vec![root, root1, root2];
-    io::process("table.dat", &commands);
+    let commands: Vec<_>= opt.commands
+        .iter()
+        .map(|s| parse_command(s))
+        .collect();
+    
+    io::process(&opt.file, &commands);
 }
 
 
 #[cfg(test)]
 mod tests{
     use crate::lex_parser::parse_command;
-
+    use lex_parser::collapse;
     use super::*;
     #[test]
     fn check()

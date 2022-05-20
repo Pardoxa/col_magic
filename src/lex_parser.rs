@@ -9,7 +9,10 @@ pub enum Operation{
 pub fn parse_command(command: &str) -> Calculation<'static>
 {
     let command = LexItem::parse(command);
-    println!("{:?}", command);
+    if VERBOSITY.load(std::sync::atomic::Ordering::Relaxed)
+    {
+        println!("{:?}", command);
+    }
     collapse(command)
 }
 
@@ -64,8 +67,9 @@ impl LastItem
 
 fn collapse_inside_parenthesis(mut sequence: Vec<LexItem<'static>>) -> Calculation<'static>
 {
-    #[cfg(debug_assertions)]
-    println!("{:?}", sequence);
+    if VERBOSITY.load(std::sync::atomic::Ordering::Relaxed){
+        println!("{:?}", sequence);
+    }
     if sequence.is_empty(){
         panic!("PARSING ERROR - empty sequence passed");
     }
