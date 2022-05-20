@@ -1,7 +1,3 @@
-
-
-
-
 use crate::lex_parser::{collapse, parse_command};
 
 mod lex_parser;
@@ -23,7 +19,7 @@ fn main() {
     let root2 = parse_command(command3);
     println!("{}", root2.get_float(&l));
 
-    let command0 = "C0 - 1";
+    let command0 = "-C0 - 1";
     let root = parse_command(command0);
 
     let commands = vec![root, root1, root2];
@@ -53,6 +49,21 @@ mod tests{
         let command = parse_command("(1+1)*2");
         assert_eq!(command.get_float(&l), 4.0);
         let command = parse_command("(1+1)*2+0.5*C0");
-        assert_eq!(command.get_float(&l), 4.5)
+        assert_eq!(command.get_float(&l), 4.5);
+        let command = parse_command("1--1");
+        assert_eq!(command.get_float(&l), 2.0);
+        let command = parse_command("1---1");
+        assert_eq!(command.get_float(&l), 0.0);
+        let command = parse_command("1--(-1)");
+        assert_eq!(command.get_float(&l), 0.0);
+
+        let command = parse_command("1+1-1*12");
+        assert_eq!(command.get_float(&l), -10.0);
+
+        let command = parse_command("1+1-1*-12");
+        assert_eq!(command.get_float(&l), 14.0);
+
+        let command = parse_command("exp(-12)");
+        assert_eq!(command.get_float(&l), (-12.0_f64).exp());
     }
 }

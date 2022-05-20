@@ -49,8 +49,22 @@ pub fn check_parenthesis(slice: &[LexItem]) -> u32
     max_counter
 }
 
+enum LastItem{
+    Value,
+    Other,
+}
+
+impl LastItem
+{
+    pub fn is_other(&self) -> bool
+    {
+        matches!(self, Self::Other)
+    }
+}
+
 fn collapse_inside_parenthesis(mut sequence: Vec<LexItem<'static>>) -> Root<'static>
 {
+    #[cfg(debug_assertions)]
     println!("{:?}", sequence);
     if sequence.is_empty(){
         panic!("PARSING ERROR - empty sequence passed");
@@ -64,6 +78,54 @@ fn collapse_inside_parenthesis(mut sequence: Vec<LexItem<'static>>) -> Root<'sta
             }
         }
     }
+
+    // collapse minus if minus is at a position where it has to be a sign
+    let mut last = LastItem::Other;
+    let mut iter = sequence.iter().peekable();
+    let mut pos = 0;
+    loop{
+        let current = match iter.next()
+        {
+            None => break,
+            Some(v) => v
+        };
+
+        if current.is_minus() && last.is_other()
+        {
+            // means this has to be a sign or it is invalid!
+            // I think - testing or more thinking required
+            let next = iter.peek().expect("invalid minus");
+            if next.is_root()
+            {
+                drop(iter);
+                let mut drain = sequence.drain(pos..=pos+1);
+                let next = drain.nth(1).expect("invalid minus");
+                drop(drain);
+                let r = match next{
+                    LexItem::Root(root) => {
+                        root
+                    },
+                    _ => {
+                        eprintln!("Invalid minus");
+                        std::process::exit(2);
+                    }
+                };
+                let minus = Minus::new(r);
+                sequence.insert(pos, LexItem::Root(minus.into()));
+                return collapse_inside_parenthesis(sequence);
+            }       
+        }
+
+        if current.is_root()
+        {
+            last = LastItem::Value;
+        } else {
+            last = LastItem::Other;
+        }
+        pos += 1;
+    }
+
+
     let pos = sequence.iter().position(|i| matches!(i, LexItem::Expression(_)));
 
     if let Some(p) = pos {
@@ -234,6 +296,16 @@ pub enum LexItem<'a>{
 
 impl<'a> LexItem<'a>
 {
+    pub fn is_minus(&self) -> bool 
+    {
+        matches!(self, Self::Minus)
+    }
+
+    pub fn is_root(&self) -> bool
+    {
+        matches!(self, Self::Root(_))
+    }
+
     pub fn parse(command: &str) -> Vec<Self>
     {
         let mut result = Vec::new();
