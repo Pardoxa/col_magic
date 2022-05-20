@@ -123,9 +123,11 @@ fn collapse_inside_parenthesis(mut sequence: Vec<LexItem<'static>>) -> Root<'sta
         return collapse_inside_parenthesis(sequence);
     }
 
-    let pos = sequence.iter().position(|i| matches!(i, LexItem::Operation(Operation::Plus)));
+    let pos = sequence.iter().position(|i| matches!(i, LexItem::Operation(Operation::Plus) | LexItem::Minus));
 
     if let Some(pos) = pos {
+
+        
         if pos == 0 || pos+1>= sequence.len() {
             eprintln!("ERROR: Addition invalid");
             std::process::exit(1);
@@ -138,7 +140,8 @@ fn collapse_inside_parenthesis(mut sequence: Vec<LexItem<'static>>) -> Root<'sta
             LexItem::Root(root) => root,
             _ => panic!("ERROR: Addition, left is not reducable to number :(")
         };
-        let last = iter.nth(1).unwrap();
+        let operation = iter.next().unwrap();
+        let last = iter.next().unwrap();
         let right = match last 
         {
             LexItem::Root(root) => root,
@@ -146,10 +149,20 @@ fn collapse_inside_parenthesis(mut sequence: Vec<LexItem<'static>>) -> Root<'sta
                 panic!("ERROR: Addition, right is not reducable to number :( {:?}", last)
             }
         };
-        let mul = AddBranch::new(left, right);
         drop(iter);
-        sequence.insert(pos-1, LexItem::Root(mul.into()));
+        let root = if matches!(&operation, LexItem::Operation(Operation::Plus)){
+            let add = AddBranch::new(left, right);
+            add.into()
+        } else {
+            let min = MinusBranch::new(left, right);
+            min.into()
+        };
+
+        sequence.insert(pos-1, LexItem::Root(root));
         return collapse_inside_parenthesis(sequence);
+        
+
+        
     }
     println!("{:?}", sequence);
     unimplemented!()
@@ -214,7 +227,9 @@ pub enum LexItem<'a>{
     Root(Root<'a>),
     Parentesis(Par),
     Operation(Operation),
-    Expression(Expression)
+    Expression(Expression),
+    // note: minus can be sign or operator!
+    Minus
 }
 
 impl<'a> LexItem<'a>
@@ -269,6 +284,9 @@ impl<'a> LexItem<'a>
             return (LexItem::Expression(Expression::Sin), p);
         } else if let Some(p) = substr.strip_prefix("exp") {
             return (LexItem::Expression(Expression::Exp), p);
+        } else if let Some(p) = substr.strip_prefix('-')
+        {
+            return (LexItem::Minus, p);
         }
         // match floats
         let float = r"^\d*\.?\d*";
