@@ -6,17 +6,17 @@ pub use magic_chain::*;
 pub mod io;
 mod cmd;
 use structopt::StructOpt;
-use std::sync::atomic::AtomicBool;
 
-
-static VERBOSITY: AtomicBool = AtomicBool::new(false);
+// Since I am single threaded here. 
+// Otherwise an Atomic would be used
+static mut VERBOSITY: bool = false; 
 
 fn main() {
 
     let opt = cmd::Cmd::from_args();
 
     if opt.verbose{
-        VERBOSITY.store(true, std::sync::atomic::Ordering::Relaxed);
+        unsafe{VERBOSITY = true;}
     }
 
     let commands: Vec<_>= opt.commands
