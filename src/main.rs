@@ -66,5 +66,8 @@ mod tests{
 
         let command = parse_command("exp(-12)");
         assert_eq!(command.get_float(&l), (-12.0_f64).exp());
+
+        let command = parse_command("12*12/12");
+        assert_eq!(command.get_float(&l), 12.0);
     }
 }

@@ -3,7 +3,8 @@ use super::*;
 #[derive(Debug, PartialEq)]
 pub enum Operation{
     Plus,
-    Mul
+    Mul,
+    Div
 }
 
 pub fn parse_command(command: &str) -> Calculation<'static>
@@ -162,31 +163,44 @@ fn collapse_inside_parenthesis(mut sequence: Vec<LexItem<'static>>) -> Calculati
         return collapse_inside_parenthesis(sequence);
     }
 
-    let pos = sequence.iter().position(|i| matches!(i, LexItem::Operation(Operation::Mul)));
+    let pos = sequence.iter()
+        .position(|i| matches!(i, LexItem::Operation(Operation::Mul| Operation::Div)));
+
+
 
     if let Some(pos) = pos {
-        if pos == 0 || pos+1>= sequence.len() {
-            eprintln!("ERROR: Multiplication invalid");
-            std::process::exit(1);
+        macro_rules! boilerplate_div_mul {
+            ($t:ident, $name:ident) => {
+                if pos == 0 || pos+1>= sequence.len() {
+                    
+                    eprintln!("ERROR: {} invalid", stringify!($name));
+                    std::process::exit(1);
+                }
+                let mut iter = sequence.drain(pos-1..=pos+1);
+        
+                let first = iter.next().unwrap();
+                let left = match first 
+                {
+                    LexItem::Calculation(root) => root,
+                    _ => panic!("ERROR: {}, left is not reducable to number :(", stringify!($name))
+                };
+                let last = iter.nth(1).unwrap();
+                let right = match last 
+                {
+                    LexItem::Calculation(root) => root,
+                    _ => panic!("ERROR: {}, right is not reducable to number :(", stringify!($name))
+                };
+                let mul = $t::new(left, right);
+                drop(iter);
+                sequence.insert(pos-1, LexItem::Calculation(mul.into()));
+                return collapse_inside_parenthesis(sequence);
+            }
         }
-        let mut iter = sequence.drain(pos-1..=pos+1);
-
-        let first = iter.next().unwrap();
-        let left = match first 
-        {
-            LexItem::Calculation(root) => root,
-            _ => panic!("ERROR: Multiplication, left is not reducable to number :(")
-        };
-        let last = iter.nth(1).unwrap();
-        let right = match last 
-        {
-            LexItem::Calculation(root) => root,
-            _ => panic!("ERROR: Multiplication, right is not reducable to number :(")
-        };
-        let mul = MulBranch::new(left, right);
-        drop(iter);
-        sequence.insert(pos-1, LexItem::Calculation(mul.into()));
-        return collapse_inside_parenthesis(sequence);
+        if matches!(&sequence[pos],  LexItem::Operation(Operation::Mul)){
+            boilerplate_div_mul!(MulBranch, Multiplication);
+        } else {
+            boilerplate_div_mul!(DivBranch, Division);
+        }
     }
 
     let pos = sequence.iter().position(|i| matches!(i, LexItem::Operation(Operation::Plus) | LexItem::Minus));
@@ -338,7 +352,11 @@ impl<'a> LexItem<'a>
         } else if let Some(p) = substr.strip_prefix('*')
         {
             return (LexItem::Operation(Operation::Mul), p);
-        } else if let Some(p) = substr.strip_prefix('C')
+        } else if let Some(p) = substr.strip_prefix('/')
+        {
+            return (LexItem::Operation(Operation::Div), p);
+        }
+        else if let Some(p) = substr.strip_prefix('C')
         {
             let integer = r"^\d+";
             let re = regex::Regex::new(integer).unwrap();

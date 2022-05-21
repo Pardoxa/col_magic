@@ -1,8 +1,9 @@
-use std::ops::Deref;
-
+use std::ops::*;
 use std::fmt::Debug;
 use super::io::*;
 
+// Of course I could also combine these two macros easily, 
+// I just chose not to
 macro_rules! create_branch_struct {
     ($t:ident) => {
         pub struct $t<'a> {
@@ -25,37 +26,26 @@ macro_rules! create_branch_struct {
     }
 }
 
-
-
-pub struct Pow<'a>
-{
-    a: Calculation<'a>,
-    b: Calculation<'a>
+macro_rules! impl_get_float_for_branch {
+    ($t:ident, $operation:ident) => {
+        impl<'a> GetFloat for $t<'a> {
+            fn get_float(&self, data: &[LazyFloatParser]) -> f64 {
+                self.a.get_float(data).$operation(self.b.get_float(data))
+            }
+            
+            fn get_float_const(&self) -> Option<f64> {
+               let a = self.a.get_float_const()?;
+               let b = self.b.get_float_const()?;
+               Some(a.$operation(b))
+            }
+        }
+    };
 }
 
-// think about macro
+// pow is jet to be implemented into the commands
+// create_branch_struct!(Pow);
+// impl_get_float_for_branch!(Pow, powf);
 
-//impl<'a> Pow<'a>
-//{
-//    fn new<A, B>(a: A, b: B) -> Self
-//    where A: Into<Calculation<'a>>,
-//        B: Into<Calculation<'a>>
-//    {
-//        Self { a: a.into(), b: b.into() }
-//    }
-//}
-
-impl<'a> GetFloat for Pow<'a> {
-    fn get_float(&self, data: &[LazyFloatParser]) -> f64 {
-        self.a.get_float(data).powf(self.b.get_float(data))
-    }
-    
-    fn get_float_const(&self) -> Option<f64> {
-       let a = self.a.get_float_const()?;
-       let b = self.b.get_float_const()?;
-       Some(a.powf(b))
-    }
-}
 
 pub struct Sin<'a>
 {
@@ -70,6 +60,7 @@ impl<'a> Sin<'a>
     }
 }
 
+
 impl<'a> GetFloat for Sin<'a>
 {
     fn get_float(&self, data: &[LazyFloatParser]) -> f64 {
@@ -82,19 +73,7 @@ impl<'a> GetFloat for Sin<'a>
 }
 
 create_branch_struct!(MinusBranch);
-
-impl<'a> GetFloat for MinusBranch<'a>
-{
-    fn get_float(&self, data: &[LazyFloatParser]) -> f64 {
-        self.a.get_float(data) - self.b.get_float(data)
-    }
-
-    fn get_float_const(&self) -> Option<f64> {
-        let a = self.a.get_float_const()?;
-        let b = self.b.get_float_const()?;
-        Some(a - b)
-    }
-}
+impl_get_float_for_branch!(MinusBranch, sub);
 
 #[derive(Debug)]
 pub struct Minus<'a>
@@ -151,50 +130,13 @@ impl<'a> GetFloat for Exp<'a>
 }
 
 create_branch_struct!(MulBranch);
-
-impl<'a> GetFloat for MulBranch<'a>
-{
-    fn get_float(&self, data: &[LazyFloatParser]) -> f64 {
-        self.a.get_float(data) * self.b.get_float(data)
-    }
-
-    fn get_float_const(&self) -> Option<f64> {
-        let a = self.a.get_float_const()?;
-        let b = self.b.get_float_const()?;
-        Some(a * b)
-    }
-}
+impl_get_float_for_branch!(MulBranch, mul);
 
 create_branch_struct!(DivBranch);
-
-impl<'a> GetFloat for DivBranch<'a>
-{
-    fn get_float(&self, data: &[LazyFloatParser]) -> f64 {
-        self.a.get_float(data) / self.b.get_float(data)
-    }
-
-    fn get_float_const(&self) -> Option<f64> {
-        let a = self.a.get_float_const()?;
-        let b = self.b.get_float_const()?;
-        Some(a / b)
-    }
-}
+impl_get_float_for_branch!(DivBranch, div);
 
 create_branch_struct!(AddBranch);
-
-
-impl<'a> GetFloat for AddBranch<'a>
-{
-    fn get_float(&self, data: &[LazyFloatParser]) -> f64 {
-        self.a.get_float(data) + self.b.get_float(data)
-    }
-
-    fn get_float_const(&self) -> Option<f64> {
-        let a = self.a.get_float_const()?;
-        let b = self.b.get_float_const()?;
-        Some(a+b)
-    }
-}
+impl_get_float_for_branch!(AddBranch, add);
 
 #[derive(Clone, Copy, Debug)]
 pub struct Column
