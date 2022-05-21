@@ -37,7 +37,7 @@ mod tests{
     fn check()
     {
         let s = "1 2 3";
-        let l = create_lazy(s);
+        let l = io::create_lazy(s);
         let command2 = "(2+3*3+C2*2)";
 
         let c = lex_parser::LexItem::parse(command2);
@@ -69,5 +69,7 @@ mod tests{
 
         let command = parse_command("12*12/12");
         assert_eq!(command.get_float(&l), 12.0);
+        let command = parse_command("sin(0)");
+        assert_eq!(command.get_float(&l), 0.0);
     }
 }

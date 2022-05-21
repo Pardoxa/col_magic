@@ -234,7 +234,7 @@ fn collapse_inside_parenthesis(mut sequence: Vec<LexItem<'static>>) -> Calculati
             let add = AddBranch::new(left, right);
             add.into()
         } else {
-            let min = MinusBranch::new(left, right);
+            let min = SubBranch::new(left, right);
             min.into()
         };
 

@@ -86,3 +86,10 @@ impl<'a> LazyFloatParser<'a>
         }
     }
 }
+
+pub fn create_lazy(line: &'_ str) -> Vec<LazyFloatParser::<'_>>
+{
+    line.split_whitespace()
+        .map(LazyFloatParser::new)
+        .collect()
+}
