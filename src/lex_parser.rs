@@ -173,7 +173,7 @@ fn collapse_inside_parenthesis(mut sequence: Vec<LexItem<'static>>) -> Calculati
             ($t:ident, $name:ident) => {
                 if pos == 0 || pos+1>= sequence.len() {
                     
-                    eprintln!("ERROR: {} invalid", stringify!($name));
+                    eprintln!("ERROR: {} invalid - missing either left or right number for operation", stringify!($name));
                     std::process::exit(1);
                 }
                 let mut iter = sequence.drain(pos-1..=pos+1);
@@ -341,22 +341,25 @@ impl<'a> LexItem<'a>
     fn get_next(substr: &str) -> (Self, &str)
     {
 
-        if let Some(p) = substr.strip_prefix('(') {
-            return (LexItem::Parentesis(Par::Open), p);
-        } else if let Some(p) = substr.strip_prefix(')')
+        let prefix_map = [
+            ("(", LexItem::Parentesis(Par::Open)), 
+            (")", LexItem::Parentesis(Par::Close)), 
+            ("+", LexItem::Operation(Operation::Plus)), 
+            ("*", LexItem::Operation(Operation::Mul)),
+            ("/", LexItem::Operation(Operation::Div)),
+            ("-", LexItem::Minus),
+            ("sin", LexItem::Expression(Expression::Sin)),
+            ("exp", LexItem::Expression(Expression::Exp))
+        ];
+
+        for (prefix, lex) in prefix_map.into_iter()
         {
-            return (LexItem::Parentesis(Par::Close), p);
-        } else if let Some(p) = substr.strip_prefix('+')
-        {
-            return (LexItem::Operation(Operation::Plus), p);
-        } else if let Some(p) = substr.strip_prefix('*')
-        {
-            return (LexItem::Operation(Operation::Mul), p);
-        } else if let Some(p) = substr.strip_prefix('/')
-        {
-            return (LexItem::Operation(Operation::Div), p);
+            if let Some(p) = substr.strip_prefix(prefix) {
+                return (lex, p);
+            }
         }
-        else if let Some(p) = substr.strip_prefix('C')
+
+        if let Some(p) = substr.strip_prefix('C')
         {
             let integer = r"^\d+";
             let re = regex::Regex::new(integer).unwrap();
@@ -373,15 +376,8 @@ impl<'a> LexItem<'a>
                     panic!("Error at parsing colum index")
                 }
             };
-        } else if let Some(p) = substr.strip_prefix("sin")
-        {
-            return (LexItem::Expression(Expression::Sin), p);
-        } else if let Some(p) = substr.strip_prefix("exp") {
-            return (LexItem::Expression(Expression::Exp), p);
-        } else if let Some(p) = substr.strip_prefix('-')
-        {
-            return (LexItem::Minus, p);
         }
+
         // match floats
         let float = r"^\d*\.?\d*";
         let re = regex::Regex::new(float).unwrap();
@@ -393,6 +389,6 @@ impl<'a> LexItem<'a>
             let root = val.into();
             return (LexItem::Calculation(root), &substr[m.end()..]);
         }
-        unimplemented!()
+        panic!("Command string couldn't be parsed into Table Calculation")
     }
 }

@@ -25,16 +25,21 @@ impl Value{
 }
 
 impl GetFloat for Value {
+    /// get a number that depends on the table
     fn get_float(&self, _: &[LazyFloatParser]) -> f64 {
         self.val
     }
 
+    /// If the value is not dependant on the table
     fn get_float_const(&self) -> Option<f64> {
         Some(self.val)
     }
 }
 
-
+// Note: I think I might be able to avoid all live times by 
+// using 'static here.
+// But all the 'a don't really bother me,
+// so I keep them
 pub struct Calculation<'a>
 {
     value_getter: Box<dyn GetFloat + 'a >
@@ -42,6 +47,9 @@ pub struct Calculation<'a>
 
 impl<'a> Calculation<'a>
 {
+    /// tries to avoid calculating something over and 
+    /// over again, if the result is KNOWN to
+    /// never change
     pub fn shortcircuit_or_self(mut self) -> Self
     {
         if let Some(val) = self.get_float_const()
