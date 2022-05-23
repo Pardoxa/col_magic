@@ -380,7 +380,7 @@ impl<'a> LexItem<'a>
         }
 
         // match floats
-        let float = r"^(\d+\.?\d*)|\.\d*";
+        let float = r"^(\d+\.?\d*)|\.\d+";
         let re = regex::Regex::new(float).unwrap();
         
         if let Some(m) = re.find(substr) {
