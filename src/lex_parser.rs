@@ -349,7 +349,8 @@ impl<'a> LexItem<'a>
             ("/", LexItem::Operation(Operation::Div)),
             ("-", LexItem::Minus),
             ("sin", LexItem::Expression(Expression::Sin)),
-            ("exp", LexItem::Expression(Expression::Exp))
+            ("exp", LexItem::Expression(Expression::Exp)),
+            ("pi", LexItem::Calculation(Calculation::from(Value::new(std::f64::consts::PI))))
         ];
 
         for (prefix, lex) in prefix_map.into_iter()
@@ -368,7 +369,7 @@ impl<'a> LexItem<'a>
             {
                 Some(m) => {
                     let idx = &p[m.start()..m.end()];
-                    let idx = idx.parse().unwrap();
+                    let idx = idx.parse().expect("Can not parse column number. Please check your Command String");
                     let col = Column::new(idx);
                     (LexItem::Calculation(col.into()), &p[m.end()..])
                 }, 
@@ -379,7 +380,7 @@ impl<'a> LexItem<'a>
         }
 
         // match floats
-        let float = r"^\d*\.?\d*";
+        let float = r"^(\d+\.?\d*)|\.\d*";
         let re = regex::Regex::new(float).unwrap();
         
         if let Some(m) = re.find(substr) {
@@ -389,6 +390,6 @@ impl<'a> LexItem<'a>
             let root = val.into();
             return (LexItem::Calculation(root), &substr[m.end()..]);
         }
-        panic!("Command string couldn't be parsed into Table Calculation")
+        panic!("Command string couldn't be parsed into Table Calculation - left to parse: {}", substr)
     }
 }

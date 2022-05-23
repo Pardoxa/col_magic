@@ -44,10 +44,10 @@ pub fn process(file: &str, commands: &[Calculation])
 
                 let mut iter = commands.iter();
                 let first = iter.next().expect("No commands given? Abbort!");
-                print!("{}", first.get_float(&lazy));
+                print!("{:e}", first.get_float(&lazy));
                 for c in iter
                 {
-                    print!(" {}", c.get_float(&lazy));
+                    print!(" {:e}", c.get_float(&lazy));
                 }
                 println!()
             }
