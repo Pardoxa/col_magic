@@ -160,22 +160,23 @@ macro_rules! create_expr_struct {
 }
 
 
-
-// pow is yet to be implemented into the commands
-// create_branch_struct!(Pow);
-// impl_get_float_for_branch!(Pow, powf);
-
-
 create_branch_struct!(AddBranch, add);
 create_branch_struct!(SubBranch, sub);
 create_branch_struct!(MulBranch, mul);
 create_branch_struct!(DivBranch, div);
+create_branch_struct!(PowBranch, powf);
 
 // I am quite sure there is a way to get all of these in one macro call,
 // but this is short enough for me
 create_expr_struct!(Sin, sin);
 create_expr_struct!(Minus, neg);
 create_expr_struct!(Exp, exp);
+create_expr_struct!(Cos, cos);
+create_expr_struct!(Ln, ln);
+create_expr_struct!(Tan, tan);
+create_expr_struct!(Asin, asin);
+create_expr_struct!(Acos, acos);
+create_expr_struct!(Atan, atan);
 
 
 #[derive(Clone, Copy, Debug)]

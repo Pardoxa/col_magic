@@ -4,7 +4,8 @@ use super::*;
 pub enum Operation{
     Plus,
     Mul,
-    Div
+    Div,
+    Pow
 }
 
 pub fn parse_command(command: &str) -> Calculation<'static>
@@ -156,11 +157,68 @@ fn collapse_inside_parenthesis(mut sequence: Vec<LexItem<'static>>) -> Calculati
             Expression::Sin => {
                 let sin = Sin::new(root);
                 sin.into()
+            }, 
+            Expression::Cos => {
+                let cos = Cos::new(root);
+                cos.into()
+            },
+            Expression::Ln => {
+                let ln = Ln::new(root);
+                ln.into()
+            },
+            Expression::Tan => {
+                let tan = Tan::new(root);
+                tan.into()
+            },
+            Expression::Asin => {
+                let asin = Asin::new(root);
+                asin.into()
+            },
+            Expression::Acos => {
+                let acos = Acos::new(root);
+                acos.into()
+            },
+            Expression::Atan => {
+                let atan = Atan::new(root);
+                atan.into()
             }
         };
         drop(iter);
         sequence.insert(p, LexItem::Calculation(root));
         return collapse_inside_parenthesis(sequence);
+    }
+
+    let pos = sequence.iter()
+        .position(|i| matches!(i, LexItem::Operation(Operation::Pow)));
+
+
+
+    if let Some(pos) = pos {
+        
+        if pos == 0 || pos+1>= sequence.len() {
+            
+            eprintln!("ERROR: ^ invalid - missing either left or right number for operation");
+            std::process::exit(1);
+        }
+        let mut iter = sequence.drain(pos-1..=pos+1);
+
+        let first = iter.next().unwrap();
+        let left = match first 
+        {
+            LexItem::Calculation(root) => root,
+            _ => panic!("ERROR: ^, left is not reducable to number :(")
+        };
+        let last = iter.nth(1).unwrap();
+        let right = match last 
+        {
+            LexItem::Calculation(root) => root,
+            _ => panic!("ERROR: ^, right is not reducable to number :(")
+        };
+        let mul = PowBranch::new(left, right);
+        drop(iter);
+        sequence.insert(pos-1, LexItem::Calculation(mul.into()));
+        return collapse_inside_parenthesis(sequence);
+        
     }
 
     let pos = sequence.iter()
@@ -299,7 +357,13 @@ pub enum Par{
 #[derive(Debug)]
 pub enum Expression{
     Exp,
-    Sin
+    Sin,
+    Cos,
+    Ln,
+    Tan,
+    Asin,
+    Acos,
+    Atan
 }
 
 #[derive(Debug)]
@@ -349,8 +413,15 @@ impl<'a> LexItem<'a>
             ("/", LexItem::Operation(Operation::Div)),
             ("-", LexItem::Minus),
             ("sin", LexItem::Expression(Expression::Sin)),
+            ("cos", LexItem::Expression(Expression::Cos)),
             ("exp", LexItem::Expression(Expression::Exp)),
-            ("pi", LexItem::Calculation(Calculation::from(Value::new(std::f64::consts::PI))))
+            ("ln", LexItem::Expression(Expression::Ln)),
+            ("pi", LexItem::Calculation(Calculation::from(Value::new(std::f64::consts::PI)))),
+            ("tan", LexItem::Expression(Expression::Tan)),
+            ("asin", LexItem::Expression(Expression::Asin)),
+            ("acos", LexItem::Expression(Expression::Acos)),
+            ("atan", LexItem::Expression(Expression::Atan)),
+            ("^", LexItem::Operation(Operation::Pow))
         ];
 
         for (prefix, lex) in prefix_map.into_iter()
