@@ -165,6 +165,7 @@ create_branch_struct!(SubBranch, sub);
 create_branch_struct!(MulBranch, mul);
 create_branch_struct!(DivBranch, div);
 create_branch_struct!(PowBranch, powf);
+create_branch_struct!(Min, min);
 
 // I am quite sure there is a way to get all of these in one macro call,
 // but this is short enough for me
@@ -185,6 +186,7 @@ create_expr_struct!(Cosh, cosh);
 create_expr_struct!(Acosh, acosh);
 create_expr_struct!(Asinh, asinh);
 create_expr_struct!(Abs, abs);
+create_expr_struct!(Signum, signum);
 
 #[derive(Clone, Copy, Debug)]
 pub struct Column

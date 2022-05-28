@@ -5,7 +5,13 @@ pub enum Operation{
     Plus,
     Mul,
     Div,
-    Pow
+    Pow,
+}
+
+#[derive(Debug, PartialEq)]
+pub enum Function
+{
+    Min
 }
 
 pub fn parse_command(command: &str) -> Calculation<'static>
@@ -213,6 +219,10 @@ fn collapse_inside_parenthesis(mut sequence: Vec<LexItem<'static>>) -> Calculati
             Expression::Abs => {
                 let abs = Abs::new(root);
                 abs.into()
+            },
+            Expression::Signum => {
+                let sig = Signum::new(root);
+                sig.into()
             }
         };
         drop(iter);
@@ -373,11 +383,39 @@ pub fn collapse(mut command_sequence: Vec<LexItem<'static>>) -> Calculation<'sta
     assert!(matches!(last, Some(LexItem::Parentesis(Par::Close))));
     let first = iter.next();
     assert!(matches!(first, Some(LexItem::Parentesis(Par::Open))));
-    let inside = iter.collect();
-    let root = collapse_inside_parenthesis(inside);
-    command_sequence.insert(pos_start, LexItem::Calculation(root));
+    let mut inside: Vec<_> = iter.collect();
+    
 
+    let pos = inside.iter().position(|item| matches!(item, LexItem::Comma));
+    
+    if let Some(p) = pos
+    {
+        let command = command_sequence.remove(pos_start-1);
+        let fun = match command
+        {
+            LexItem::Function(f) => f,
+            _ => panic!("Invalid use of Comma")
+        };
+
+        let right: Vec<_> = inside.drain(p..).skip(1).collect();
+        let left = inside;
+
+        let calc: Calculation = match fun{
+            Function::Min => {
+                let left = collapse_inside_parenthesis(left);
+                let right = collapse_inside_parenthesis(right);
+                Min::new(left, right).into()
+            }
+        };
+        let lex = LexItem::Calculation(calc);
+        command_sequence.insert(pos_start-1, lex);
+    } else {
+        let root = collapse_inside_parenthesis(inside);
+        command_sequence.insert(pos_start, LexItem::Calculation(root));
+    }
     collapse(command_sequence)
+
+    
 }
 
 #[derive(Debug)]
@@ -403,7 +441,8 @@ pub enum Expression{
     Sqrt,
     Cbrt,
     Abs,
-    Asinh
+    Asinh,
+    Signum
 }
 
 #[derive(Debug)]
@@ -413,7 +452,9 @@ pub enum LexItem<'a>{
     Operation(Operation),
     Expression(Expression),
     // note: minus can be sign or operator!
-    Minus
+    Minus,
+    Comma,
+    Function(Function)
 }
 
 impl<'a> LexItem<'a>
@@ -469,7 +510,10 @@ impl<'a> LexItem<'a>
             ("atan",    LexItem::Expression(Expression::Atan)),
             ("sqrt",    LexItem::Expression(Expression::Sqrt)),
             ("cbrt",    LexItem::Expression(Expression::Cbrt)),
-            ("^",       LexItem::Operation(Operation::Pow))
+            ("^",       LexItem::Operation(Operation::Pow)),
+            ("signum",  LexItem::Expression(Expression::Signum)),
+            ("min",     LexItem::Function(Function::Min)),
+            (",",       LexItem::Comma)
         ];
 
         for (prefix, lex) in prefix_map.into_iter()
