@@ -173,11 +173,18 @@ create_expr_struct!(Minus, neg);
 create_expr_struct!(Exp, exp);
 create_expr_struct!(Cos, cos);
 create_expr_struct!(Ln, ln);
+create_expr_struct!(Log10, log10);
 create_expr_struct!(Tan, tan);
 create_expr_struct!(Asin, asin);
 create_expr_struct!(Acos, acos);
 create_expr_struct!(Atan, atan);
-
+create_expr_struct!(Sqrt, sqrt);
+create_expr_struct!(Cbrt, cbrt);
+create_expr_struct!(Sinh, sinh);
+create_expr_struct!(Cosh, cosh);
+create_expr_struct!(Acosh, acosh);
+create_expr_struct!(Asinh, asinh);
+create_expr_struct!(Abs, abs);
 
 #[derive(Clone, Copy, Debug)]
 pub struct Column

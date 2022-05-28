@@ -157,11 +157,23 @@ fn collapse_inside_parenthesis(mut sequence: Vec<LexItem<'static>>) -> Calculati
             Expression::Sin => {
                 let sin = Sin::new(root);
                 sin.into()
-            }, 
+            },
+            Expression::Sinh => {
+                let sinh = Sinh::new(root);
+                sinh.into()
+            },
+            Expression::Asinh => {
+                let asinh = Asinh::new(root);
+                asinh.into()
+            },
             Expression::Cos => {
                 let cos = Cos::new(root);
                 cos.into()
             },
+            Expression::Cosh => {
+                let cosh = Cosh::new(root);
+                cosh.into()
+            }
             Expression::Ln => {
                 let ln = Ln::new(root);
                 ln.into()
@@ -178,9 +190,29 @@ fn collapse_inside_parenthesis(mut sequence: Vec<LexItem<'static>>) -> Calculati
                 let acos = Acos::new(root);
                 acos.into()
             },
+            Expression::Acosh => {
+                let acosh = Acosh::new(root);
+                acosh.into()
+            }
             Expression::Atan => {
                 let atan = Atan::new(root);
                 atan.into()
+            },
+            Expression::Log10 => {
+                let log10 = Log10::new(root);
+                log10.into()
+            },
+            Expression::Sqrt => {
+                let sqrt = Sqrt::new(root);
+                sqrt.into()
+            },
+            Expression::Cbrt => {
+                let cbrt = Cbrt::new(root);
+                cbrt.into()
+            },
+            Expression::Abs => {
+                let abs = Abs::new(root);
+                abs.into()
             }
         };
         drop(iter);
@@ -358,12 +390,20 @@ pub enum Par{
 pub enum Expression{
     Exp,
     Sin,
+    Sinh,
     Cos,
+    Cosh,
     Ln,
+    Log10,
     Tan,
     Asin,
+    Acosh,
     Acos,
-    Atan
+    Atan,
+    Sqrt,
+    Cbrt,
+    Abs,
+    Asinh
 }
 
 #[derive(Debug)]
@@ -406,22 +446,30 @@ impl<'a> LexItem<'a>
     {
 
         let prefix_map = [
-            ("(", LexItem::Parentesis(Par::Open)), 
-            (")", LexItem::Parentesis(Par::Close)), 
-            ("+", LexItem::Operation(Operation::Plus)), 
-            ("*", LexItem::Operation(Operation::Mul)),
-            ("/", LexItem::Operation(Operation::Div)),
-            ("-", LexItem::Minus),
-            ("sin", LexItem::Expression(Expression::Sin)),
-            ("cos", LexItem::Expression(Expression::Cos)),
-            ("exp", LexItem::Expression(Expression::Exp)),
-            ("ln", LexItem::Expression(Expression::Ln)),
-            ("pi", LexItem::Calculation(Calculation::from(Value::new(std::f64::consts::PI)))),
-            ("tan", LexItem::Expression(Expression::Tan)),
-            ("asin", LexItem::Expression(Expression::Asin)),
-            ("acos", LexItem::Expression(Expression::Acos)),
-            ("atan", LexItem::Expression(Expression::Atan)),
-            ("^", LexItem::Operation(Operation::Pow))
+            ("(",       LexItem::Parentesis(Par::Open)), 
+            (")",       LexItem::Parentesis(Par::Close)), 
+            ("+",       LexItem::Operation(Operation::Plus)), 
+            ("*",       LexItem::Operation(Operation::Mul)),
+            ("/",       LexItem::Operation(Operation::Div)),
+            ("-",       LexItem::Minus),
+            ("abs",     LexItem::Expression(Expression::Abs)),
+            ("sinh",    LexItem::Expression(Expression::Sinh)),
+            ("sin",     LexItem::Expression(Expression::Sin)),
+            ("cosh",    LexItem::Expression(Expression::Cosh)),
+            ("cos",     LexItem::Expression(Expression::Cos)),
+            ("exp",     LexItem::Expression(Expression::Exp)),
+            ("ln",      LexItem::Expression(Expression::Ln)),
+            ("log10",   LexItem::Expression(Expression::Log10)),
+            ("pi",      LexItem::Calculation(Calculation::from(Value::new(std::f64::consts::PI)))),
+            ("tan",     LexItem::Expression(Expression::Tan)),
+            ("asinh",   LexItem::Expression(Expression::Asinh)),
+            ("asin",    LexItem::Expression(Expression::Asin)),
+            ("acosh",   LexItem::Expression(Expression::Acosh)),
+            ("acos",    LexItem::Expression(Expression::Acos)),
+            ("atan",    LexItem::Expression(Expression::Atan)),
+            ("sqrt",    LexItem::Expression(Expression::Sqrt)),
+            ("cbrt",    LexItem::Expression(Expression::Cbrt)),
+            ("^",       LexItem::Operation(Operation::Pow))
         ];
 
         for (prefix, lex) in prefix_map.into_iter()
