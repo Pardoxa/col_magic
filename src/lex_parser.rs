@@ -11,7 +11,8 @@ pub enum Operation{
 #[derive(Debug, PartialEq)]
 pub enum Function
 {
-    Min
+    Min,
+    Max
 }
 
 pub fn parse_command(command: &str) -> Calculation<'static>
@@ -156,74 +157,24 @@ fn collapse_inside_parenthesis(mut sequence: Vec<LexItem<'static>>) -> Calculati
             }
         };
         let root = match expression{
-            Expression::Exp => {
-                let exp = Exp::new(root);
-                exp.into()
-            }, 
-            Expression::Sin => {
-                let sin = Sin::new(root);
-                sin.into()
-            },
-            Expression::Sinh => {
-                let sinh = Sinh::new(root);
-                sinh.into()
-            },
-            Expression::Asinh => {
-                let asinh = Asinh::new(root);
-                asinh.into()
-            },
-            Expression::Cos => {
-                let cos = Cos::new(root);
-                cos.into()
-            },
-            Expression::Cosh => {
-                let cosh = Cosh::new(root);
-                cosh.into()
-            }
-            Expression::Ln => {
-                let ln = Ln::new(root);
-                ln.into()
-            },
-            Expression::Tan => {
-                let tan = Tan::new(root);
-                tan.into()
-            },
-            Expression::Asin => {
-                let asin = Asin::new(root);
-                asin.into()
-            },
-            Expression::Acos => {
-                let acos = Acos::new(root);
-                acos.into()
-            },
-            Expression::Acosh => {
-                let acosh = Acosh::new(root);
-                acosh.into()
-            }
-            Expression::Atan => {
-                let atan = Atan::new(root);
-                atan.into()
-            },
-            Expression::Log10 => {
-                let log10 = Log10::new(root);
-                log10.into()
-            },
-            Expression::Sqrt => {
-                let sqrt = Sqrt::new(root);
-                sqrt.into()
-            },
-            Expression::Cbrt => {
-                let cbrt = Cbrt::new(root);
-                cbrt.into()
-            },
-            Expression::Abs => {
-                let abs = Abs::new(root);
-                abs.into()
-            },
-            Expression::Signum => {
-                let sig = Signum::new(root);
-                sig.into()
-            }
+            Expression::Exp     => Exp::    new(root).into(), 
+            Expression::Sin     => Sin::    new(root).into(),
+            Expression::Sinh    => Sinh::   new(root).into(),
+            Expression::Asinh   => Asinh::  new(root).into(),
+            Expression::Cos     => Cos::    new(root).into(),
+            Expression::Cosh    => Cosh::   new(root).into(),
+            Expression::Ln      => Ln::     new(root).into(),
+            Expression::Tan     => Tan::    new(root).into(),
+            Expression::Asin    => Asin::   new(root).into(),
+            Expression::Acos    => Acos::   new(root).into(),
+            Expression::Acosh   => Acosh::  new(root).into(),
+            Expression::Atan    => Atan::   new(root).into(),
+            Expression::Log10   => Log10::  new(root).into(),
+            Expression::Sqrt    => Sqrt::   new(root).into(),
+            Expression::Cbrt    => Cbrt::   new(root).into(),
+            Expression::Abs     => Abs::    new(root).into(),
+            Expression::Signum  => Signum:: new(root).into(),
+            Expression::Floor   => Floor::  new(root).into()
         };
         drop(iter);
         sequence.insert(p, LexItem::Calculation(root));
@@ -399,13 +350,13 @@ pub fn collapse(mut command_sequence: Vec<LexItem<'static>>) -> Calculation<'sta
 
         let right: Vec<_> = inside.drain(p..).skip(1).collect();
         let left = inside;
+        let left = collapse_inside_parenthesis(left);
+        let right = collapse_inside_parenthesis(right);
 
         let calc: Calculation = match fun{
-            Function::Min => {
-                let left = collapse_inside_parenthesis(left);
-                let right = collapse_inside_parenthesis(right);
-                Min::new(left, right).into()
-            }
+            Function::Min => Min::new(left, right).into(),
+            Function::Max => Max::new(left, right).into()
+            
         };
         let lex = LexItem::Calculation(calc);
         command_sequence.insert(pos_start-1, lex);
@@ -442,7 +393,8 @@ pub enum Expression{
     Cbrt,
     Abs,
     Asinh,
-    Signum
+    Signum,
+    Floor
 }
 
 #[derive(Debug)]
@@ -513,7 +465,9 @@ impl<'a> LexItem<'a>
             ("^",       LexItem::Operation(Operation::Pow)),
             ("signum",  LexItem::Expression(Expression::Signum)),
             ("min",     LexItem::Function(Function::Min)),
-            (",",       LexItem::Comma)
+            ("max",     LexItem::Function(Function::Max)),
+            (",",       LexItem::Comma),
+            ("floor",   LexItem::Expression(Expression::Floor))
         ];
 
         for (prefix, lex) in prefix_map.into_iter()
