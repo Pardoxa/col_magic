@@ -156,26 +156,35 @@ fn collapse_inside_parenthesis(mut sequence: Vec<LexItem<'static>>) -> Calculati
                 std::process::exit(1);
             }
         };
-        let root = match expression{
-            Expression::Exp     => Exp::    new(root).into(), 
-            Expression::Sin     => Sin::    new(root).into(),
-            Expression::Sinh    => Sinh::   new(root).into(),
-            Expression::Asinh   => Asinh::  new(root).into(),
-            Expression::Cos     => Cos::    new(root).into(),
-            Expression::Cosh    => Cosh::   new(root).into(),
-            Expression::Ln      => Ln::     new(root).into(),
-            Expression::Tan     => Tan::    new(root).into(),
-            Expression::Asin    => Asin::   new(root).into(),
-            Expression::Acos    => Acos::   new(root).into(),
-            Expression::Acosh   => Acosh::  new(root).into(),
-            Expression::Atan    => Atan::   new(root).into(),
-            Expression::Log10   => Log10::  new(root).into(),
-            Expression::Sqrt    => Sqrt::   new(root).into(),
-            Expression::Cbrt    => Cbrt::   new(root).into(),
-            Expression::Abs     => Abs::    new(root).into(),
-            Expression::Signum  => Signum:: new(root).into(),
-            Expression::Floor   => Floor::  new(root).into()
-        };
+        
+        macro_rules! my_match {
+            ($obj:expr, $($name:ident),*) => {
+                match $obj {
+                    $(Expression::$name => $name::new(root).into(),)*
+                }
+            }
+         }
+        let root = my_match!(
+            expression, 
+            Exp,
+            Cos,
+            Sin,
+            Sinh,
+            Asinh,
+            Cosh,
+            Ln,
+            Tan,
+            Asin,
+            Acos,
+            Acosh,
+            Atan,
+            Log10,
+            Sqrt,
+            Cbrt,
+            Abs,
+            Signum,
+            Floor
+        );
         drop(iter);
         sequence.insert(p, LexItem::Calculation(root));
         return collapse_inside_parenthesis(sequence);
