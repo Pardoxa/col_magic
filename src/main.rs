@@ -11,6 +11,10 @@ use structopt::StructOpt;
 // Otherwise an Atomic would be used
 static mut VERBOSITY: bool = false; 
 
+fn get_verbosity() -> bool {
+    unsafe{VERBOSITY}
+}
+
 fn main() {
 
     let opt = cmd::Cmd::from_args();

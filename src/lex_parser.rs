@@ -18,7 +18,7 @@ pub enum Function
 pub fn parse_command(command: &str) -> Calculation<'static>
 {
     let command = LexItem::parse(command);
-    if unsafe{VERBOSITY}
+    if get_verbosity()
     {
         println!("{:?}", command);
     }
@@ -76,7 +76,7 @@ impl LastItem
 
 fn collapse_inside_parenthesis(mut sequence: Vec<LexItem<'static>>) -> Calculation<'static>
 {
-    if unsafe{VERBOSITY}{
+    if get_verbosity(){
         println!("{:?}", sequence);
     }
     if sequence.is_empty(){
