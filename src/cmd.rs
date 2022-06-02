@@ -7,5 +7,6 @@ pub struct Cmd
     pub commands: Vec<String>,
 
     #[structopt(short, long)]
+    /// Prints information during command parsing
     pub verbose: bool
 }

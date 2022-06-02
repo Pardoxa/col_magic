@@ -189,6 +189,8 @@ create_expr_struct!(Asinh, asinh);
 create_expr_struct!(Abs, abs);
 create_expr_struct!(Signum, signum);
 create_expr_struct!(Floor, floor);
+create_expr_struct!(Ceil, ceil);
+create_expr_struct!(Round, round);
 
 #[derive(Clone, Copy, Debug)]
 pub struct Column

@@ -183,7 +183,9 @@ fn collapse_inside_parenthesis(mut sequence: Vec<LexItem<'static>>) -> Calculati
             Cbrt,
             Abs,
             Signum,
-            Floor
+            Floor,
+            Ceil,
+            Round
         );
         drop(iter);
         sequence.insert(p, LexItem::Calculation(root));
@@ -403,7 +405,9 @@ pub enum Expression{
     Abs,
     Asinh,
     Signum,
-    Floor
+    Floor,
+    Ceil,
+    Round
 }
 
 #[derive(Debug)]
@@ -476,7 +480,9 @@ impl<'a> LexItem<'a>
             ("min",     LexItem::Function(Function::Min)),
             ("max",     LexItem::Function(Function::Max)),
             (",",       LexItem::Comma),
-            ("floor",   LexItem::Expression(Expression::Floor))
+            ("floor",   LexItem::Expression(Expression::Floor)),
+            ("ceil",    LexItem::Expression(Expression::Ceil)),
+            ("round",   LexItem::Expression(Expression::Round))
         ];
 
         for (prefix, lex) in prefix_map.into_iter()
