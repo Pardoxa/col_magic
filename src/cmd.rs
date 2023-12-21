@@ -42,5 +42,9 @@ pub struct Cmd
 
     #[structopt(short, long)]
     /// Prints information during command parsing
-    pub verbose: bool
+    pub verbose: bool,
+
+    /// if flag is set, first line will be the call to this program, with a # in front
+    #[structopt(short, long)]
+    pub print_cmd: bool
 }

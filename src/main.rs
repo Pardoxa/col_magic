@@ -1,4 +1,6 @@
-use crate::lex_parser::{parse_command};
+use std::env::args;
+
+use crate::lex_parser::parse_command;
 
 mod lex_parser;
 mod magic_chain;
@@ -21,6 +23,13 @@ fn main() {
 
     if opt.verbose{
         unsafe{VERBOSITY = true;}
+    }
+    if opt.print_cmd{
+        print!("#");
+        for arg in args(){
+            print!(" {arg}");
+        }
+        println!();
     }
 
     let commands: Vec<_>= opt.commands
